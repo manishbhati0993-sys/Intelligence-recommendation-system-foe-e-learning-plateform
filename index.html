@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>EduRecommend - Intelligent E-Learning Platform</title>
+</head>
+
+<body>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js"></script>
+    <header>
+
+        <div>
+            <h1>EduRecommend</h1>
+            <p>Intelligent E-Learning Platform</p>
+        </div>
+
+        <nav>
+            <a href="#dashboard">Dashboard</a>
+            <a href="#courses">Courses</a>
+            <a href="#learning-path">Learning Path</a>
+            <a href="#progress">Progress</a>
+            <a href="#profile">Profile</a>
+            <a href="login.html">Logout</a>
+        </nav>
+
+    </header>
+
+
+    <hr>
+
+
+    <!-- =========================
+         MAIN CONTENT
+    ========================== -->
+
+    <main>
+
+        <!-- =========================
+             DASHBOARD
+        ========================== -->
+
+        <section id="dashboard">
+
+            <h2>Welcome back, Manish! 👋</h2>
+
+            <p>
+                Continue your learning journey and discover courses
+                recommended specially for you.
+            </p>
+
+            <!-- Search -->
+
+            <form action="#" method="GET">
+
+                <label for="course-search">
+                    Search Courses
+                </label>
+
+                <br>
+
+                <input
+                    type="search"
+                    id="course-search"
+                    name="search"
+                    placeholder="Search for courses..."
+                >
+
+                <button type="submit">
+                    Search
+                </button>
+
+            </form>
+
+            <br>
+
+        </section>
+
+
+        <hr>
+
+
+        <!-- =========================
+             AI RECOMMENDATIONS
+        ========================== -->
+
+        <section id="recommendations">
+
+            <h2>🤖 AI Recommended Courses</h2>
+
+            <p>
+                These courses are recommended based on your skills,
+                interests and learning activity.
+            </p>
+
+
+            <!-- COURSE 1 -->
+
+            <article class="course">
+
+                <h3>Python for Data Science</h3>
+
+                <p>
+                    Learn Python programming, NumPy, Pandas,
+                    data visualization and data analysis.
+                </p>
+
+                <p>
+                    <strong>AI Match:</strong> 96%
+                </p>
+
+                <p>
+                    <strong>Level:</strong> Beginner
+                </p>
+
+                <p>
+                    <strong>Duration:</strong> 8 Weeks
+                </p>
+
+                <p>
+                    <strong>Skills:</strong>
+                    Python, NumPy, Pandas, Data Analysis
+                </p>
+
+                <button type="button">
+                    Start Course
+                </button>
+
+            </article>
+
+            <br>
+
+
+            <!-- COURSE 2 -->
+
+            <article class="course">
+
+                <h3>Java Data Structures &amp; Algorithms</h3>
+
+                <p>
+                    Learn Java programming, arrays, linked lists,
+                    stacks, queues, trees, graphs and algorithms.
+                </p>
+
+                <p>
+                    <strong>AI Match:</strong> 92%
+                </p>
+
+                <p>
+                    <strong>Level:</strong> Intermediate
+                </p>
+
+                <p>
+                    <strong>Duration:</strong> 10 Weeks
+                </p>
+
+                <p>
+                    <strong>Skills:</strong>
+                    Java, DSA, Problem Solving
+                </p>
+
+                <button type="button">
+                    Start Course
+                </button>
+
+            </article>
+
+            <br>
+
+
+            <!-- COURSE 3 -->
+
+            <article class="course">
+
+                <h3>Machine Learning Fundamentals</h3>
+
+                <p>
+                    Understand machine learning concepts,
+                    supervised learning, unsupervised learning
+                    and model evaluation.
+                </p>
+
+                <p>
+                    <strong>AI Match:</strong> 89%
+                </p>
+
+                <p>
+                    <strong>Level:</strong> Intermediate
+                </p>
+
+                <p>
+                    <strong>Duration:</strong> 12 Weeks
+                </p>
+
+                <p>
+                    <strong>Skills:</strong>
+                    Python, Machine Learning, Statistics
+                </p>
+
+                <button type="button">
+                    Start Course
+                </button>
+
+            </article>
+
+            <br>
+
+
+            <!-- COURSE 4 -->
+
+            <article class="course">
+
+                <h3>Full Stack Web Development</h3>
+
+                <p>
+                    Learn HTML, CSS, JavaScript, frontend development,
+                    backend development and databases.
+                </p>
+
+                <p>
+                    <strong>AI Match:</strong> 87%
+                </p>
+
+                <p>
+                    <strong>Level:</strong> Beginner to Intermediate
+                </p>
+
+                <p>
+                    <strong>Duration:</strong> 14 Weeks
+                </p>
+
+                <p>
+                    <strong>Skills:</strong>
+                    HTML, CSS, JavaScript, Node.js, Database
+                </p>
+
+                <button type="button">
+                    Start Course
+                </button>
+
+            </article>
+
+        </section>
+
+
+        <hr>
+
+
+        <!-- =========================
+             COURSES
+        ========================== -->
+
+        <section id="courses">
+
+            <h2>📚 Explore Courses</h2>
+
+            <p>
+                Browse courses available on the platform.
+            </p>
+
+            <table border="1">
+
+                <thead>
+
+                    <tr>
+                        <th>Course</th>
+                        <th>Category</th>
+                        <th>Level</th>
+                        <th>Duration</th>
+                        <th>Action</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    <tr>
+                        <td>Python for Data Science</td>
+                        <td>Data Science</td>
+                        <td>Beginner</td>
+                        <td>8 Weeks</td>
+                        <td>
+                            <button type="button">
+                                Start
+                            </button>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>Java Data Structures &amp; Algorithms</td>
+                        <td>Programming</td>
+                        <td>Intermediate</td>
+                        <td>10 Weeks</td>
+                        <td>
+                            <button type="button">
+                                Start
+                            </button>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>Machine Learning Fundamentals</td>
+                        <td>Artificial Intelligence</td>
+                        <td>Intermediate</td>
+                        <td>12 Weeks</td>
+                        <td>
+                            <button type="button">
+                                Start
+                            </button>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>Full Stack Web Development</td>
+                        <td>Web Development</td>
+                        <td>Beginner</td>
+                        <td>14 Weeks</td>
+                        <td>
+                            <button type="button">
+                                Start
+                            </button>
+                        </td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </section>
+
+
+        <hr>
+
+
+        <!-- =========================
+             LEARNING PATH
+        ========================== -->
+
+        <section id="learning-path">
+
+            <h2>🛣️ Your Learning Path</h2>
+
+            <p>
+                Your personalized learning path generated by
+                the recommendation system.
+            </p>
+
+            <ol>
+
+                <li>
+                    <h3>Python Basics</h3>
+
+                    <p>
+                        Learn variables, data types, conditions,
+                        loops, functions and basic programming.
+                    </p>
+                </li>
+
+
+                <li>
+                    <h3>Data Structures</h3>
+
+                    <p>
+                        Learn arrays, linked lists, stacks,
+                        queues, trees and graphs.
+                    </p>
+                </li>
+
+
+                <li>
+                    <h3>Machine Learning</h3>
+
+                    <p>
+                        Learn machine learning algorithms,
+                        datasets and model evaluation.
+                    </p>
+                </li>
+
+
+                <li>
+                    <h3>AI Projects</h3>
+
+                    <p>
+                        Build practical AI and machine learning
+                        projects for your portfolio.
+                    </p>
+                </li>
+
+            </ol>
+
+        </section>
+
+
+        <hr>
+
+
+        <!-- =========================
+             PROGRESS
+        ========================== -->
+
+        <section id="progress">
+
+            <h2>📊 Learning Progress</h2>
+
+            <p>
+                Track your overall learning progress.
+            </p>
+
+            <label for="overall-progress">
+                Overall Progress:
+            </label>
+
+            <progress
+                id="overall-progress"
+                value="72"
+                max="100">
+                72%
+            </progress>
+
+            <p>
+                <strong>72% Completed</strong>
+            </p>
+
+
+            <h3>Course Progress</h3>
+
+            <ul>
+
+                <li>
+                    Python Basics -
+                    <progress value="90" max="100"></progress>
+                    90%
+                </li>
+
+                <li>
+                    Data Structures -
+                    <progress value="70" max="100"></progress>
+                    70%
+                </li>
+
+                <li>
+                    Machine Learning -
+                    <progress value="50" max="100"></progress>
+                    50%
+                </li>
+
+                <li>
+                    AI Projects -
+                    <progress value="30" max="100"></progress>
+                    30%
+                </li>
+
+            </ul>
+
+        </section>
+
+
+        <hr>
+
+
+        <!-- =========================
+             SKILLS
+        ========================== -->
+
+        <section id="skills">
+
+            <h2>💡 Your Skills</h2>
+
+            <p>
+                Skills identified from your profile and
+                learning activity.
+            </p>
+
+            <ul>
+
+                <li>HTML</li>
+
+                <li>CSS</li>
+
+                <li>JavaScript</li>
+
+                <li>Python</li>
+
+                <li>Artificial Intelligence</li>
+
+                <li>Prompt Engineering</li>
+
+            </ul>
+
+        </section>
+
+
+        <hr>
+
+
+        <!-- =========================
+             PROFILE
+        ========================== -->
+
+        <section id="profile">
+
+            <h2>👤 Student Profile</h2>
+
+            <p>
+                <strong>Name:</strong>
+                Manish Bhati
+            </p>
+
+            <p>
+                <strong>Course:</strong>
+                B.Tech CSE
+            </p>
+
+            <p>
+                <strong>Role:</strong>
+                Student
+            </p>
+
+            <p>
+                <strong>Learning Level:</strong>
+                Intermediate
+            </p>
+
+            <p>
+                <strong>Interests:</strong>
+                Artificial Intelligence,
+                Web Development,
+                Data Science
+            </p>
+
+        </section>
+
+
+        <hr>
+
+
+        <!-- =========================
+             RECOMMENDATION FEEDBACK
+        ========================== -->
+
+        <section id="feedback">
+
+            <h2>⭐ Recommendation Feedback</h2>
+
+            <p>
+                Help us improve your recommendations.
+            </p>
+
+            <form action="#" method="POST">
+
+                <label for="course-rating">
+                    How useful are your recommendations?
+                </label>
+
+                <br>
+
+                <select id="course-rating" name="rating">
+
+                    <option value="">
+                        Select Rating
+                    </option>
+
+                    <option value="5">
+                        5 - Excellent
+                    </option>
+
+                    <option value="4">
+                        4 - Very Good
+                    </option>
+
+                    <option value="3">
+                        3 - Good
+                    </option>
+
+                    <option value="2">
+                        2 - Poor
+                    </option>
+
+                    <option value="1">
+                        1 - Very Poor
+                    </option>
+
+                </select>
+
+                <br><br>
+
+                <label for="feedback-message">
+                    Feedback
+                </label>
+
+                <br>
+
+                <textarea
+                    id="feedback-message"
+                    name="feedback"
+                    rows="5"
+                    cols="40"
+                    placeholder="Tell us what you think...">
+                </textarea>
+
+                <br><br>
+
+                <button type="submit">
+                    Submit Feedback
+                </button>
+
+            </form>
+
+        </section>
+
+    </main>
+
+
+    <hr>
+
+
+    <!-- =========================
+         FOOTER
+    ========================== -->
+
+    <footer>
+
+        <h3>EduRecommend</h3>
+
+        <p>
+            Intelligent Recommendation System
+            for E-Learning Platform
+        </p>
+
+        <p>
+            &copy; 2026 EduRecommend.
+            All Rights Reserved.
+        </p>
+
+    </footer>
+
+</body>
+
+</html>
