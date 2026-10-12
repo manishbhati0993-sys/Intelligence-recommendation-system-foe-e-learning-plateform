@@ -1,0 +1,2414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EduPulse.AI — 3D Intelligence Recommendation System</title>
+
+  <!-- Three.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- EduRecommend FastAPI API Client -->
+  <script src="api.js"></script>
+
+  <style>
+    /* ===== CSS RESET & VARIABLES ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-950:    #020817;
+      --bg-900:    #0f172a;
+      --bg-800:    #1e293b;
+      --bg-700:    #334155;
+      --slate-400: #94a3b8;
+      --slate-300: #cbd5e1;
+      --slate-200: #e2e8f0;
+      --slate-100: #f1f5f9;
+      --indigo-600: #4f46e5;
+      --indigo-500: #6366f1;
+      --indigo-400: #818cf8;
+      --indigo-300: #a5b4fc;
+      --emerald-500: #10b981;
+      --emerald-400: #34d399;
+      --emerald-300: #6ee7b7;
+      --cyan-400:  #22d3ee;
+      --cyan-300:  #67e8f9;
+      --amber-400: #fbbf24;
+      --amber-300: #fcd34d;
+      --purple-400: #c084fc;
+      --purple-500: #a855f7;
+      --rose-500:  #f43f5e;
+      --teal-400:  #2dd4bf;
+      --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg-950);
+      color: var(--slate-100);
+      font-family: var(--font);
+      overflow: hidden;
+    }
+
+    /* ===== SCROLLBAR ===== */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: var(--bg-900); }
+    ::-webkit-scrollbar-thumb { background: var(--bg-700); border-radius: 99px; }
+
+    /* ===== LAYOUT ===== */
+    #app { display: flex; flex-direction: column; height: 100vh; }
+
+    /* ===== NAVBAR ===== */
+    #navbar {
+      height: 60px;
+      background: rgba(2,8,23,0.92);
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      backdrop-filter: blur(18px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      flex-shrink: 0;
+      z-index: 40;
+      position: sticky;
+      top: 0;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+    .brand-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--indigo-600), var(--teal-400));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    .brand-name {
+      font-size: 17px;
+      font-weight: 800;
+      background: linear-gradient(to right, #fff, var(--indigo-300));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.5px;
+    }
+    .brand-badge {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--indigo-300);
+      background: rgba(99,102,241,0.15);
+      border: 1px solid rgba(99,102,241,0.3);
+      padding: 2px 7px;
+      border-radius: 6px;
+    }
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 12px;
+      border: 1px solid;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: none;
+    }
+    .nav-btn.universe {
+      border-color: rgba(34,211,238,0.4);
+      color: var(--cyan-300);
+      background: rgba(34,211,238,0.08);
+    }
+    .nav-btn.universe:hover,
+    .nav-btn.universe.active {
+      background: linear-gradient(135deg, #0891b2, var(--indigo-600));
+      color: #fff;
+      border-color: rgba(34,211,238,0.6);
+    }
+    .nav-btn.streak {
+      border-color: rgba(251,191,36,0.3);
+      color: var(--amber-300);
+      background: rgba(251,191,36,0.08);
+    }
+    .nav-btn.ai-live {
+      border-color: rgba(16,185,129,0.3);
+      color: var(--emerald-300);
+      background: rgba(16,185,129,0.08);
+    }
+    .pulse-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--emerald-400);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(0.85)} }
+
+    /* ===== MAIN BODY ===== */
+    #body-wrap {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ===== SIDEBAR ===== */
+    #sidebar {
+      width: 240px;
+      flex-shrink: 0;
+      background: rgba(15,23,42,0.95);
+      border-right: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      flex-direction: column;
+      padding: 16px 12px;
+      gap: 8px;
+      overflow-y: auto;
+    }
+    .career-card {
+      background: linear-gradient(135deg, rgba(79,70,229,0.2), rgba(15,23,42,0.8));
+      border: 1px solid rgba(99,102,241,0.25);
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 4px;
+      position: relative;
+      overflow: hidden;
+    }
+    .career-card::after {
+      content:'';
+      position:absolute;
+      top:-20px; right:-20px;
+      width:80px; height:80px;
+      background: rgba(99,102,241,0.12);
+      border-radius:50%;
+      filter:blur(20px);
+    }
+    .career-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--indigo-400);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 4px;
+    }
+    .career-role {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--slate-100);
+      margin-bottom: 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .readiness-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--slate-400);
+      margin-bottom: 5px;
+    }
+    .readiness-val { color: var(--emerald-400); font-weight: 700; font-family: monospace; }
+    .progress-bar-wrap {
+      width: 100%;
+      height: 5px;
+      background: var(--bg-700);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: linear-gradient(to right, var(--emerald-500), var(--teal-400));
+      transition: width 0.6s ease;
+    }
+    .nav-section-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--slate-400);
+      padding: 2px 10px;
+      margin-top: 4px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.18s;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--slate-400);
+      border: 1px solid transparent;
+    }
+    .nav-item:hover { color: var(--slate-100); background: rgba(255,255,255,0.04); }
+    .nav-item.active {
+      background: var(--indigo-600);
+      color: #fff;
+      box-shadow: 0 4px 18px rgba(79,70,229,0.35);
+    }
+    .nav-item-left { display: flex; align-items: center; gap: 9px; }
+    .nav-icon { font-size: 14px; }
+    .nav-badge {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 6px;
+      border: 1px solid;
+    }
+    .badge-emerald { background: rgba(16,185,129,0.15); color: var(--emerald-300); border-color: rgba(16,185,129,0.3); }
+    .badge-cyan    { background: rgba(34,211,238,0.12); color: var(--cyan-300); border-color: rgba(34,211,238,0.3); }
+    .badge-indigo  { background: rgba(99,102,241,0.15); color: var(--indigo-300); border-color: rgba(99,102,241,0.3); }
+    .badge-slate   { background: rgba(100,116,139,0.15); color: var(--slate-300); border-color: rgba(100,116,139,0.3); }
+    .nav-item.active .nav-badge { background: rgba(255,255,255,0.18); color:#fff; border-color: rgba(255,255,255,0.3); }
+
+    .sidebar-bottom {
+      margin-top: auto;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .weekly-widget {
+      background: rgba(15,23,42,0.8);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 11px;
+    }
+    .weekly-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--slate-400);
+      margin-bottom: 6px;
+    }
+    .ai-status {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: rgba(16,185,129,0.06);
+      border: 1px solid rgba(16,185,129,0.2);
+      border-radius: 12px;
+      font-size: 11px;
+      color: var(--emerald-300);
+    }
+    .ai-status-right { font-size: 10px; opacity: 0.8; font-family: monospace; }
+
+    /* ===== MAIN CONTENT ===== */
+    #main-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 28px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* ===== VIEWS ===== */
+    .view { display: none; flex-direction: column; gap: 24px; }
+    .view.active { display: flex; }
+
+    /* ===== HERO BANNER ===== */
+    .hero-banner {
+      background: linear-gradient(135deg, rgba(49,46,129,0.6), rgba(15,23,42,0.9));
+      border: 1px solid rgba(99,102,241,0.3);
+      border-radius: 24px;
+      padding: 28px 32px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-banner::before {
+      content:'';
+      position:absolute;
+      top:-60px; right:-60px;
+      width:280px; height:280px;
+      background:rgba(99,102,241,0.1);
+      border-radius:50%;
+      filter:blur(50px);
+      pointer-events:none;
+    }
+    .hero-banner::after {
+      content:'';
+      position:absolute;
+      bottom:-40px; right:30%;
+      width:180px; height:180px;
+      background:rgba(20,184,166,0.08);
+      border-radius:50%;
+      filter:blur(40px);
+      pointer-events:none;
+    }
+    .hero-inner {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .hero-left { flex: 1; min-width: 260px; }
+    .streak-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      background: rgba(251,191,36,0.12);
+      border: 1px solid rgba(251,191,36,0.3);
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--amber-300);
+      margin-bottom: 12px;
+    }
+    .hero-title {
+      font-size: 24px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+      line-height: 1.25;
+    }
+    .hero-title span { color: var(--indigo-400); }
+    .hero-subtitle {
+      font-size: 13px;
+      color: var(--slate-300);
+      line-height: 1.6;
+      margin-bottom: 14px;
+    }
+    .ai-tip {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      color: var(--teal-400);
+      font-weight: 600;
+    }
+    .ai-tip-icon {
+      width: 24px; height: 24px;
+      background: rgba(20,184,166,0.15);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+    }
+    .hero-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 10px 20px;
+      border-radius: 14px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .btn:hover { transform: scale(1.03); }
+    .btn:active { transform: scale(0.97); }
+    .btn-3d {
+      background: linear-gradient(135deg, #0891b2, var(--indigo-600), var(--purple-500));
+      color: #fff;
+      box-shadow: 0 6px 24px rgba(79,70,229,0.35);
+    }
+    .btn-primary {
+      background: var(--indigo-600);
+      color: #fff;
+      box-shadow: 0 4px 18px rgba(79,70,229,0.3);
+    }
+    .btn-secondary {
+      background: var(--bg-800);
+      color: var(--slate-200);
+      border: 1px solid var(--bg-700);
+    }
+
+    /* ===== KPI STATS GRID ===== */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+    @media(max-width:900px){ .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+    .stat-card {
+      background: rgba(15,23,42,0.85);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 18px;
+      padding: 18px;
+      transition: border-color 0.2s;
+    }
+    .stat-card:hover { border-color: rgba(99,102,241,0.3); }
+    .stat-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .stat-label { font-size: 11px; color: var(--slate-400); }
+    .stat-icon {
+      width: 32px; height: 32px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+    }
+    .stat-icon.indigo { background: rgba(99,102,241,0.12); }
+    .stat-icon.emerald { background: rgba(16,185,129,0.12); }
+    .stat-icon.amber  { background: rgba(251,191,36,0.12); }
+    .stat-icon.cyan   { background: rgba(34,211,238,0.12); }
+    .stat-value {
+      font-size: 28px;
+      font-weight: 900;
+      font-family: monospace;
+      color: var(--slate-100);
+      margin-bottom: 4px;
+    }
+    .stat-sub {
+      font-size: 10px;
+      color: var(--emerald-400);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    /* ===== SECTION HEADERS ===== */
+    .section-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--slate-100);
+    }
+    .see-all {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--indigo-400);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      background: none;
+      border: none;
+    }
+    .see-all:hover { color: var(--indigo-300); }
+
+    /* ===== COURSE CARDS GRID ===== */
+    .courses-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    @media(max-width:1100px){ .courses-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media(max-width:700px) { .courses-grid { grid-template-columns: 1fr; } }
+    .course-card {
+      background: rgba(15,23,42,0.9);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 20px;
+      overflow: hidden;
+      transition: all 0.22s;
+      cursor: pointer;
+    }
+    .course-card:hover {
+      border-color: rgba(99,102,241,0.4);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+    }
+    .course-thumb {
+      width: 100%;
+      height: 130px;
+      object-fit: cover;
+      display: block;
+    }
+    .course-thumb-placeholder {
+      width: 100%;
+      height: 130px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+    }
+    .course-body { padding: 14px 16px 16px; }
+    .course-tags {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    .tag {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 7px;
+      border: 1px solid;
+    }
+    .tag-cat  { background: rgba(99,102,241,0.12); color: var(--indigo-300); border-color: rgba(99,102,241,0.25); }
+    .tag-match { background: rgba(16,185,129,0.12); color: var(--emerald-300); border-color: rgba(16,185,129,0.25); font-family: monospace; }
+    .tag-level { background: rgba(100,116,139,0.12); color: var(--slate-300); border-color: rgba(100,116,139,0.2); }
+    .course-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--slate-100);
+      line-height: 1.4;
+      margin-bottom: 8px;
+    }
+    .course-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 11px;
+      color: var(--slate-400);
+      margin-bottom: 10px;
+    }
+    .course-meta span { display: flex; align-items: center; gap: 3px; }
+    .course-reason {
+      font-size: 11px;
+      color: var(--emerald-400);
+      background: rgba(16,185,129,0.08);
+      border: 1px solid rgba(16,185,129,0.15);
+      border-radius: 8px;
+      padding: 6px 10px;
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+    .course-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .btn-enroll {
+      flex: 1;
+      padding: 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 700;
+      background: var(--indigo-600);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      transition: background 0.18s;
+    }
+    .btn-enroll:hover { background: #4338ca; }
+    .btn-enroll.enrolled {
+      background: rgba(16,185,129,0.12);
+      color: var(--emerald-400);
+      border: 1px solid rgba(16,185,129,0.3);
+      cursor: default;
+    }
+    .btn-bookmark {
+      width: 34px; height: 34px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--slate-300);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      transition: all 0.18s;
+    }
+    .btn-bookmark:hover, .btn-bookmark.active {
+      background: rgba(251,191,36,0.12);
+      border-color: rgba(251,191,36,0.35);
+      color: var(--amber-400);
+    }
+
+    /* ===== 3D UNIVERSE VIEW ===== */
+    .universe-hero {
+      background: rgba(15,23,42,0.9);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 24px;
+      padding: 22px 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    .universe-hero::before {
+      content:'';
+      position:absolute;
+      top:-50px; right:-50px;
+      width:240px; height:240px;
+      background:rgba(34,211,238,0.07);
+      border-radius:50%;
+      filter:blur(50px);
+    }
+    .universe-hero-inner {
+      position: relative;
+      z-index:2;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .universe-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      background: rgba(34,211,238,0.1);
+      border: 1px solid rgba(34,211,238,0.25);
+      border-radius: 99px;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--cyan-300);
+      margin-bottom: 10px;
+    }
+    .universe-title { font-size: 22px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 6px; }
+    .universe-sub   { font-size: 12px; color: var(--slate-400); line-height: 1.55; }
+    .tele-cards {
+      display: flex;
+      gap: 12px;
+    }
+    .tele-card {
+      background: rgba(2,8,23,0.7);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 12px 16px;
+      text-align: center;
+      min-width: 110px;
+    }
+    .tele-label { font-size: 9px; text-transform: uppercase; font-weight: 700; color: var(--slate-400); letter-spacing:0.08em; margin-bottom:4px; }
+    .tele-val   { font-size: 22px; font-weight: 900; font-family: monospace; }
+    .tele-val.emerald { color: var(--emerald-400); }
+    .tele-val.cyan    { color: var(--cyan-400); }
+    .tele-sub   { font-size: 10px; color: var(--slate-400); margin-top:2px; }
+
+    /* Role Pills */
+    .role-strip {
+      padding-top: 16px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+    }
+    .role-strip-label {
+      color: var(--slate-400);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .role-pill {
+      padding: 5px 12px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(2,8,23,0.7);
+      color: var(--slate-400);
+      transition: all 0.18s;
+    }
+    .role-pill:hover { color: var(--slate-200); border-color: rgba(255,255,255,0.15); }
+    .role-pill.active {
+      background: var(--indigo-600);
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 3px 12px rgba(79,70,229,0.35);
+    }
+
+    /* 3D Canvas Container */
+    #universe-wrap {
+      position: relative;
+      width: 100%;
+      height: 540px;
+      border-radius: 24px;
+      overflow: hidden;
+      border: 1px solid rgba(99,102,241,0.2);
+      background: #060913;
+    }
+    #three-canvas { width:100%; height:100%; display:block; }
+
+    /* 3D HUD Overlay */
+    #hud-top {
+      position: absolute;
+      top: 14px; left: 14px; right: 14px;
+      z-index: 20;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      pointer-events: none;
+    }
+    .hud-live-pill {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 14px;
+      background: rgba(15,23,42,0.9);
+      border: 1px solid rgba(99,102,241,0.35);
+      border-radius: 14px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+      backdrop-filter: blur(10px);
+      pointer-events: auto;
+    }
+    .vector-chip {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: rgba(99,102,241,0.2);
+      color: var(--indigo-300);
+      border: 1px solid rgba(99,102,241,0.3);
+    }
+    .hud-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      pointer-events: auto;
+    }
+    .hud-layout-group {
+      display: flex;
+      background: rgba(15,23,42,0.9);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 4px;
+      gap: 2px;
+      backdrop-filter: blur(10px);
+    }
+    .layout-btn {
+      padding: 5px 12px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--slate-400);
+      cursor: pointer;
+      border: none;
+      background: none;
+      transition: all 0.18s;
+    }
+    .layout-btn:hover { color: #fff; }
+    .layout-btn.active {
+      background: var(--indigo-600);
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(79,70,229,0.4);
+    }
+    .hud-icon-btn {
+      width: 34px; height: 34px;
+      background: rgba(15,23,42,0.9);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      color: var(--slate-300);
+      backdrop-filter: blur(10px);
+      transition: all 0.18s;
+    }
+    .hud-icon-btn:hover { color: #fff; border-color: rgba(255,255,255,0.2); }
+    .hud-icon-btn.pulse-on { color: var(--emerald-400); border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.08); }
+
+    /* 3D Tooltip */
+    #node-tooltip {
+      position: absolute;
+      z-index: 30;
+      max-width: 240px;
+      pointer-events: none;
+      display: none;
+      transform: translate(14px, -50%);
+    }
+    #node-tooltip.show { display: block; }
+    .tooltip-inner {
+      background: rgba(15,23,42,0.96);
+      border: 1px solid rgba(99,102,241,0.35);
+      border-radius: 14px;
+      padding: 12px 14px;
+      backdrop-filter: blur(14px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+    .tooltip-type-badge {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: 5px;
+      border: 1px solid;
+      margin-bottom: 6px;
+    }
+    .tooltip-title { font-size: 12px; font-weight: 700; color: var(--slate-100); line-height: 1.35; margin-bottom: 4px; }
+    .tooltip-sub   { font-size: 10px; color: var(--slate-400); margin-bottom: 8px; }
+    .tooltip-cta   { font-size: 10px; color: var(--indigo-300); display: flex; align-items: center; gap: 4px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 7px; }
+
+    /* HUD Bottom Legend */
+    #hud-bottom {
+      position: absolute;
+      bottom: 14px;
+      left: 14px; right: 14px;
+      z-index: 20;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      pointer-events: none;
+    }
+    .legend-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      background: rgba(15,23,42,0.9);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      backdrop-filter: blur(10px);
+      font-size: 10px;
+      color: var(--slate-400);
+    }
+    .legend-dot {
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .filter-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 8px 12px;
+      background: rgba(15,23,42,0.9);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      backdrop-filter: blur(10px);
+      pointer-events: auto;
+    }
+    .filter-chip {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(2,8,23,0.6);
+      color: var(--slate-400);
+      transition: all 0.15s;
+    }
+    .filter-chip:hover { color: var(--slate-200); }
+    .filter-chip.active { background: var(--indigo-600); color: #fff; border-color: transparent; }
+    .filter-slider-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      color: var(--slate-400);
+    }
+    input[type=range] { accent-color: var(--indigo-500); cursor: pointer; width: 70px; }
+    .slider-val { font-family: monospace; font-weight: 700; color: var(--emerald-400); }
+
+    /* ===== INSPECTOR PANEL ===== */
+    #inspector {
+      position: fixed;
+      top: 0; right: -480px;
+      width: 460px;
+      height: 100vh;
+      background: rgba(9,14,28,0.97);
+      border-left: 1px solid rgba(99,102,241,0.2);
+      backdrop-filter: blur(24px);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      transition: right 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: -12px 0 60px rgba(0,0,0,0.5);
+    }
+    #inspector.open { right: 0; }
+    .insp-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(15,23,42,0.6);
+      flex-shrink: 0;
+    }
+    .insp-header-left { display: flex; align-items: center; gap: 10px; }
+    .insp-type-icon {
+      width: 32px; height: 32px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+    .insp-type-label  { font-size: 10px; font-weight: 700; text-transform:uppercase; letter-spacing:0.08em; color: var(--slate-400); }
+    .insp-node-title  { font-size: 13px; font-weight: 700; color: var(--slate-100); text-transform: capitalize; }
+    .close-btn {
+      width: 32px; height: 32px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: var(--slate-400);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      transition: all 0.15s;
+    }
+    .close-btn:hover { background: rgba(255,255,255,0.1); color:#fff; }
+
+    .insp-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .insp-match-banner {
+      background: linear-gradient(135deg, rgba(49,46,129,0.5), rgba(15,23,42,0.9));
+      border: 1px solid rgba(99,102,241,0.25);
+      border-radius: 18px;
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    .insp-match-banner::before {
+      content:''; position:absolute; top:-20px; right:-20px;
+      width:100px; height:100px;
+      background:rgba(16,185,129,0.08);
+      border-radius:50%; filter:blur(20px);
+    }
+    .insp-banner-top {
+      position: relative; z-index:2;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .insp-course-title { font-size: 16px; font-weight: 800; color:#fff; line-height:1.3; }
+    .match-badge-lg {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 12px;
+      background: rgba(16,185,129,0.15);
+      border: 1px solid rgba(16,185,129,0.3);
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 900;
+      font-family: monospace;
+      color: var(--emerald-300);
+      white-space: nowrap;
+    }
+    .insp-desc { font-size: 11px; color: var(--slate-400); line-height: 1.6; margin-bottom: 12px; position:relative; z-index:2; }
+    .meta-stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      position: relative; z-index:2;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .meta-stat {
+      background: rgba(2,8,23,0.5);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 10px;
+      padding: 7px 10px;
+      text-align: center;
+    }
+    .meta-stat-label { font-size: 9px; color: var(--slate-500); margin-bottom:2px; }
+    .meta-stat-val   { font-size: 12px; font-weight: 700; color: var(--slate-200); }
+
+    .xai-block {
+      background: rgba(15,23,42,0.8);
+      border: 1px solid rgba(16,185,129,0.3);
+      border-radius: 16px;
+      padding: 14px;
+    }
+    .xai-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--emerald-400);
+      margin-bottom: 10px;
+    }
+    .xai-reason {
+      font-size: 11px;
+      color: var(--slate-300);
+      line-height: 1.6;
+      background: rgba(2,8,23,0.5);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 12px;
+    }
+    .factor-row {
+      margin-bottom: 8px;
+    }
+    .factor-top {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--slate-400);
+      margin-bottom: 3px;
+    }
+    .factor-val { font-family: monospace; font-weight: 700; }
+    .factor-val.emerald { color: var(--emerald-400); }
+    .factor-val.indigo  { color: var(--indigo-400); }
+    .factor-val.teal    { color: var(--teal-400); }
+    .factor-bar {
+      width: 100%;
+      height: 4px;
+      background: var(--bg-700);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .factor-bar-fill { height:100%; border-radius:99px; }
+    .fill-emerald { background: var(--emerald-500); }
+    .fill-indigo  { background: var(--indigo-500); }
+    .fill-teal    { background: var(--teal-400); }
+
+    .skills-block { display: flex; flex-direction: column; gap: 8px; }
+    .skills-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--slate-300);
+    }
+    .skills-wrap { display: flex; flex-wrap: wrap; gap: 7px; }
+    .skill-tag {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      background: rgba(15,23,42,0.9);
+      border: 1px solid rgba(99,102,241,0.2);
+      border-radius: 8px;
+      font-size: 11px;
+      color: var(--indigo-300);
+    }
+
+    .insp-footer {
+      padding: 14px 18px;
+      border-top: 1px solid rgba(255,255,255,0.07);
+      background: rgba(15,23,42,0.8);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .footer-row { display: flex; gap: 8px; }
+    .btn-full {
+      flex: 1;
+      padding: 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.18s;
+    }
+    .btn-full:hover { transform: scale(1.02); }
+    .btn-full.primary {
+      background: linear-gradient(135deg, var(--indigo-600), var(--purple-500));
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(79,70,229,0.35);
+    }
+    .btn-full.enrolled-state {
+      background: rgba(16,185,129,0.1);
+      color: var(--emerald-400);
+      border: 1px solid rgba(16,185,129,0.3);
+      cursor: default;
+    }
+    .btn-full.secondary {
+      background: rgba(15,23,42,0.9);
+      color: var(--slate-200);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .btn-icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      background: rgba(15,23,42,0.9);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--slate-300);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-icon:hover { border-color: rgba(251,191,36,0.4); color: var(--amber-400); }
+    .btn-icon.bookmarked { background: rgba(251,191,36,0.1); border-color: rgba(251,191,36,0.4); color: var(--amber-400); }
+
+    /* ===== SKILL GAP PAGE ===== */
+    .gap-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    @media(max-width:700px){ .gap-grid { grid-template-columns:1fr; } }
+    .gap-card {
+      background: rgba(15,23,42,0.85);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 18px;
+      padding: 18px;
+      transition: border-color 0.2s;
+    }
+    .gap-card:hover { border-color: rgba(99,102,241,0.3); }
+    .gap-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+    .gap-skill-name { font-size: 13px; font-weight: 700; color: var(--slate-100); }
+    .gap-chip {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 8px;
+      font-family: monospace;
+    }
+    .gap-high   { background: rgba(244,63,94,0.12); color: #fb7185; border: 1px solid rgba(244,63,94,0.25); }
+    .gap-medium { background: rgba(251,191,36,0.12); color: var(--amber-300); border: 1px solid rgba(251,191,36,0.25); }
+    .gap-low    { background: rgba(16,185,129,0.12); color: var(--emerald-300); border: 1px solid rgba(16,185,129,0.25); }
+    .gap-bar-section { margin-bottom: 10px; }
+    .gap-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--slate-400);
+      margin-bottom: 4px;
+    }
+
+    /* ===== PROFILE PAGE ===== */
+    .profile-grid { display: grid; grid-template-columns: 260px 1fr; gap: 20px; }
+    @media(max-width:800px){ .profile-grid { grid-template-columns: 1fr; } }
+    .profile-card {
+      background: rgba(15,23,42,0.85);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 20px;
+      padding: 24px 20px;
+      text-align: center;
+    }
+    .avatar-wrap {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      margin: 0 auto 12px;
+      background: linear-gradient(135deg, var(--indigo-600), var(--teal-400));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      border: 3px solid rgba(99,102,241,0.4);
+    }
+    .profile-name  { font-size: 17px; font-weight: 800; margin-bottom: 3px; }
+    .profile-title { font-size: 11px; color: var(--slate-400); margin-bottom: 16px; }
+    .profile-stats { display: grid; grid-template-columns: repeat(3,1fr); gap:8px; margin-top:16px; }
+    .p-stat { background: rgba(2,8,23,0.5); border-radius:10px; padding:8px 4px; border:1px solid rgba(255,255,255,0.06); }
+    .p-stat-v { font-size:18px; font-weight:900; font-family:monospace; color:var(--slate-100); }
+    .p-stat-l { font-size:9px; color:var(--slate-400); margin-top:2px; }
+    .competency-list { display:flex; flex-direction:column; gap:10px; }
+    .comp-row { display:flex; flex-direction:column; gap:5px; }
+    .comp-top { display:flex; justify-content:space-between; font-size:11px; color:var(--slate-300); }
+    .comp-bar {
+      height: 7px;
+      background: var(--bg-700);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .comp-fill {
+      height:100%;
+      border-radius:99px;
+      background: linear-gradient(to right, var(--indigo-600), var(--teal-400));
+    }
+
+    /* ===== TOAST ===== */
+    #toast-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .toast {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 16px;
+      background: rgba(15,23,42,0.97);
+      border: 1px solid rgba(99,102,241,0.3);
+      border-radius: 14px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+      backdrop-filter: blur(14px);
+      min-width: 280px;
+      max-width: 360px;
+      animation: slideIn 0.3s ease;
+    }
+    @keyframes slideIn { from{transform:translateX(30px);opacity:0} to{transform:translateX(0);opacity:1} }
+    .toast-icon { font-size: 18px; flex-shrink:0; margin-top:1px; }
+    .toast-title { font-size: 12px; font-weight: 700; color: var(--slate-100); margin-bottom:2px; }
+    .toast-msg   { font-size: 11px; color: var(--slate-400); line-height: 1.4; }
+  </style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ===== NAVBAR ===== -->
+  <nav id="navbar">
+    <div class="brand" onclick="navigate('dashboard')">
+      <div class="brand-icon">🧠</div>
+      <div>
+        <div style="display:flex;align-items:center;gap:7px">
+          <span class="brand-name">EduPulse<span style="color:var(--indigo-400)">.AI</span></span>
+          <span class="brand-badge">PRO AI</span>
+        </div>
+        <div style="font-size:10px;color:var(--slate-400)">Intelligent Adaptive Learning</div>
+      </div>
+    </div>
+
+    <div class="nav-right">
+      <button class="nav-btn universe" id="nav-3d-btn" onclick="navigate('neural-universe')">⬡ 3D Universe</button>
+      <button class="nav-btn streak">🔥 14d Streak</button>
+      <div class="nav-btn ai-live" id="nav-backend-status"><div class="pulse-dot"></div> AI Engine</div>
+      <a href="login.html" class="nav-btn" style="border-color:rgba(99,102,241,0.4);color:var(--indigo-300);text-decoration:none;">🔑 Sign In / Register</a>
+    </div>
+  </nav>
+
+  <!-- ===== BODY WRAP ===== -->
+  <div id="body-wrap">
+
+    <!-- SIDEBAR -->
+    <aside id="sidebar">
+      <!-- Career Card -->
+      <div class="career-card">
+        <div class="career-label"><span class="pulse-dot" style="width:6px;height:6px"></span> Active Career Vector</div>
+        <div class="career-role" id="sidebar-role">AI / Machine Learning Engineer</div>
+        <div class="readiness-row">
+          <span>Readiness Index</span>
+          <span class="readiness-val">78.5%</span>
+        </div>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:78.5%"></div></div>
+      </div>
+
+      <div class="nav-section-label">Navigation</div>
+
+      <div class="nav-item active" id="nav-dashboard" onclick="navigate('dashboard')">
+        <div class="nav-item-left"><span class="nav-icon">📊</span> Student Dashboard</div>
+      </div>
+      <div class="nav-item" id="nav-recommendations" onclick="navigate('recommendations')">
+        <div class="nav-item-left"><span class="nav-icon">✨</span> AI Recommendations</div>
+        <span class="nav-badge badge-emerald">98% Fit</span>
+      </div>
+      <div class="nav-item" id="nav-neural-universe" onclick="navigate('neural-universe')">
+        <div class="nav-item-left"><span class="nav-icon">🌐</span> 3D Neural Universe</div>
+        <span class="nav-badge badge-cyan">3D AI</span>
+      </div>
+      <div class="nav-item" id="nav-skill-gap" onclick="navigate('skill-gap')">
+        <div class="nav-item-left"><span class="nav-icon">🎯</span> Skill Gap & Roadmap</div>
+        <span class="nav-badge badge-indigo">2 Gaps</span>
+      </div>
+      <div class="nav-item" id="nav-catalog" onclick="navigate('catalog')">
+        <div class="nav-item-left"><span class="nav-icon">📚</span> Course Catalog</div>
+        <span class="nav-badge badge-slate">15+</span>
+      </div>
+      <div class="nav-item" id="nav-profile" onclick="navigate('profile')">
+        <div class="nav-item-left"><span class="nav-icon">👤</span> Profile & Analytics</div>
+      </div>
+
+      <div class="sidebar-bottom">
+        <div class="weekly-widget">
+          <div class="weekly-row">
+            <span>⏱ Weekly Goal</span>
+            <span style="font-family:monospace;color:var(--slate-200)">7.5 / 10h</span>
+          </div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-fill" style="width:75%;background:linear-gradient(to right,var(--indigo-500),var(--teal-400))"></div>
+          </div>
+        </div>
+        <div class="ai-status">
+          <div style="display:flex;align-items:center;gap:6px"><div class="pulse-dot"></div> AI Vector Engine</div>
+          <span class="ai-status-right">v4.2 Live</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main id="main-content">
+
+      <!-- ======= DASHBOARD VIEW ======= -->
+      <div class="view active" id="view-dashboard">
+
+        <!-- Hero Banner -->
+        <div class="hero-banner">
+          <div class="hero-inner">
+            <div class="hero-left">
+              <div class="streak-pill">🔥 14-Day Learning Streak! Keep the momentum going</div>
+              <h1 class="hero-title">Welcome back, <span>Alex Morgan</span> 👋</h1>
+              <p class="hero-subtitle">
+                Target Path: <strong>AI / Machine Learning Engineer</strong>. Your AI vector engine has ranked 3 optimal next modules to accelerate your gap closure today.
+              </p>
+              <div class="ai-tip">
+                <div class="ai-tip-icon">✨</div>
+                <span><strong>AI Recommendation:</strong> Complete <em>PyTorch Self-Attention</em> lesson to raise your Deep Learning score by +8%</span>
+              </div>
+            </div>
+            <div class="hero-actions">
+              <button class="btn btn-3d" onclick="navigate('neural-universe')">⬡ Launch 3D Universe</button>
+              <button class="btn btn-primary" onclick="navigate('recommendations')">✨ AI Recommendations</button>
+              <button class="btn btn-secondary" onclick="navigate('skill-gap')">🎯 Skill Gap Map</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPI Stats -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-top"><span class="stat-label">Completed Courses</span><div class="stat-icon indigo">🏆</div></div>
+            <div class="stat-value">4</div>
+            <div class="stat-sub">✅ 4 Verified Credentials</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-top"><span class="stat-label">Active Enrollments</span><div class="stat-icon emerald">📖</div></div>
+            <div class="stat-value">3</div>
+            <div class="stat-sub">↑ Avg 68% progress</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-top"><span class="stat-label">Total Hours Learned</span><div class="stat-icon amber">⏳</div></div>
+            <div class="stat-value">74.2</div>
+            <div class="stat-sub">⚡ 7.5h this week</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-top"><span class="stat-label">Overall Skill Score</span><div class="stat-icon cyan">🧠</div></div>
+            <div class="stat-value">84</div>
+            <div class="stat-sub">↑ Top 22% of cohort</div>
+          </div>
+        </div>
+
+        <!-- Top Recommendations -->
+        <div>
+          <div class="section-hdr">
+            <div class="section-title">✨ AI-Ranked Recommendations</div>
+            <button class="see-all" onclick="navigate('recommendations')">View All →</button>
+          </div>
+          <div class="courses-grid" id="dashboard-courses"></div>
+        </div>
+      </div>
+
+      <!-- ======= RECOMMENDATIONS VIEW ======= -->
+      <div class="view" id="view-recommendations">
+        <div class="hero-banner">
+          <div class="hero-inner">
+            <div class="hero-left">
+              <div class="streak-pill" style="background:rgba(16,185,129,0.1);border-color:rgba(16,185,129,0.25);color:var(--emerald-300)">✨ AI Vector Similarity Engine</div>
+              <h1 class="hero-title">Personalized AI Course Recommendations</h1>
+              <p class="hero-subtitle">Every course is scored via multidimensional vector cosine similarity against your target career and identified skill deficits.</p>
+            </div>
+            <button class="btn btn-primary" onclick="navigate('neural-universe')">⬡ View in 3D Universe</button>
+          </div>
+        </div>
+        <div class="section-hdr"><div class="section-title">✨ All AI-Ranked Courses</div></div>
+        <div class="courses-grid" id="rec-courses"></div>
+      </div>
+
+      <!-- ======= 3D NEURAL UNIVERSE VIEW ======= -->
+      <div class="view" id="view-neural-universe">
+
+        <!-- Hero Banner -->
+        <div class="universe-hero">
+          <div class="universe-hero-inner">
+            <div>
+              <div class="universe-chip">⬡ 3D Spatial Knowledge Universe</div>
+              <div class="universe-title">Interactive 3D Recommendation Topology</div>
+              <div class="universe-sub">Explore your educational trajectory in three dimensions. Courses, skill deficits and career milestones are mapped using cosine vector similarity in continuous 3D latent space.</div>
+            </div>
+            <div class="tele-cards">
+              <div class="tele-card">
+                <div class="tele-label">Top AI Match</div>
+                <div class="tele-val emerald">98%</div>
+                <div class="tele-sub">Peak Fit</div>
+              </div>
+              <div class="tele-card">
+                <div class="tele-label">Career Readiness</div>
+                <div class="tele-val cyan">78.5%</div>
+                <div class="tele-sub">Vector Index</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Role Switcher -->
+          <div class="role-strip" id="role-strip">
+            <span class="role-strip-label">🎯 Career Goal:</span>
+          </div>
+        </div>
+
+        <!-- 3D Canvas -->
+        <div id="universe-wrap">
+          <canvas id="three-canvas"></canvas>
+
+          <!-- HUD Top -->
+          <div id="hud-top">
+            <div class="hud-live-pill">
+              <div class="pulse-dot"></div>
+              Neural 3D Intelligence Graph
+              <span class="vector-chip">Vector Space</span>
+            </div>
+            <div class="hud-controls">
+              <div class="hud-layout-group">
+                <button class="layout-btn active" id="layout-constellation" onclick="setLayout('constellation')">Constellation</button>
+                <button class="layout-btn" id="layout-highway" onclick="setLayout('highway')">Career Highway</button>
+                <button class="layout-btn" id="layout-affinity" onclick="setLayout('affinity')">High-Affinity</button>
+              </div>
+              <button class="hud-icon-btn pulse-on" id="pulse-btn" onclick="togglePulse()" title="Toggle Synapse Pulses">⚡</button>
+              <button class="hud-icon-btn" onclick="recenterCamera()" title="Recenter">🔄</button>
+              <button class="hud-icon-btn" onclick="toggleFullscreen()" title="Fullscreen">⛶</button>
+            </div>
+          </div>
+
+          <!-- Hover Tooltip -->
+          <div id="node-tooltip">
+            <div class="tooltip-inner">
+              <div class="tooltip-type-badge" id="tt-type-badge"></div>
+              <div class="tooltip-title" id="tt-title"></div>
+              <div class="tooltip-sub" id="tt-sub"></div>
+              <div class="tooltip-cta">⚡ Click to inspect explainable AI vector</div>
+            </div>
+          </div>
+
+          <!-- HUD Bottom -->
+          <div id="hud-bottom">
+            <div class="legend-pill">
+              <span><span class="legend-dot" style="background:#22d3ee;box-shadow:0 0 5px #22d3ee"></span> Learner Core</span>
+              <span><span class="legend-dot" style="background:#f43f5e"></span> Skill Gap</span>
+              <span><span class="legend-dot" style="background:#34d399;box-shadow:0 0 5px #34d399"></span> Top Course</span>
+              <span><span class="legend-dot" style="background:#a855f7;box-shadow:0 0 5px #a855f7"></span> Career Goal</span>
+            </div>
+            <div class="filter-pill">
+              <span style="font-size:10px;color:var(--slate-400)">⚙ Filter:</span>
+              <button class="filter-chip active" onclick="setCategory('All',this)">All</button>
+              <button class="filter-chip" onclick="setCategory('AI & ML',this)">AI & ML</button>
+              <button class="filter-chip" onclick="setCategory('MLOps',this)">MLOps</button>
+              <button class="filter-chip" onclick="setCategory('Web Dev',this)">Web Dev</button>
+              <div class="filter-slider-wrap">
+                Min Match:
+                <input type="range" min="65" max="95" step="5" value="70" id="score-slider" oninput="updateScoreFilter(this.value)">
+                <span class="slider-val" id="score-val">70%+</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top 3 Course Action Cards -->
+        <div>
+          <div class="section-hdr">
+            <div class="section-title">✨ Highest-Affinity Courses in 3D Orbit</div>
+          </div>
+          <div class="courses-grid" id="universe-courses"></div>
+        </div>
+
+        <!-- How It Works -->
+        <div style="background:rgba(15,23,42,0.7);border:1px solid rgba(255,255,255,0.07);border-radius:22px;padding:22px 24px">
+          <div class="section-title" style="margin-bottom:16px">🧠 How the 3D Intelligence Recommendation Engine Operates</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">
+            <div style="background:rgba(2,8,23,0.5);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:16px">
+              <div style="width:26px;height:26px;border-radius:8px;background:rgba(34,211,238,0.15);border:1px solid rgba(34,211,238,0.3);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:var(--cyan-300);margin-bottom:8px">1</div>
+              <div style="font-size:12px;font-weight:700;color:var(--slate-200);margin-bottom:6px">High-Dimensional Embeddings</div>
+              <div style="font-size:11px;color:var(--slate-400);line-height:1.6">Your completed coursework, quiz results, and career preferences are encoded into a 128-dimensional latent vector representing your digital learning twin.</div>
+            </div>
+            <div style="background:rgba(2,8,23,0.5);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:16px">
+              <div style="width:26px;height:26px;border-radius:8px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:var(--emerald-300);margin-bottom:8px">2</div>
+              <div style="font-size:12px;font-weight:700;color:var(--slate-200);margin-bottom:6px">Deficit & Gap Bridging</div>
+              <div style="font-size:11px;color:var(--slate-400);line-height:1.6">The engine detects negative variance between current competencies and industry standards. Courses that bridge the widest gaps receive highest gravitational pull.</div>
+            </div>
+            <div style="background:rgba(2,8,23,0.5);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:16px">
+              <div style="width:26px;height:26px;border-radius:8px;background:rgba(168,85,247,0.15);border:1px solid rgba(168,85,247,0.3);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:var(--purple-400);margin-bottom:8px">3</div>
+              <div style="font-size:12px;font-weight:700;color:var(--slate-200);margin-bottom:6px">Synaptic Neural Routing</div>
+              <div style="font-size:11px;color:var(--slate-400);line-height:1.6">Moving light pulses trace optimized learning pathways from your current state to career readiness, prioritizing prerequisite chains that maximize retention.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======= SKILL GAP VIEW ======= -->
+      <div class="view" id="view-skill-gap">
+        <div class="hero-banner">
+          <div class="hero-inner">
+            <div class="hero-left">
+              <div class="streak-pill" style="background:rgba(99,102,241,0.1);border-color:rgba(99,102,241,0.3);color:var(--indigo-300)">🎯 AI Gap Detection Engine</div>
+              <h1 class="hero-title">Skill Gap <span>Analysis & Roadmap</span></h1>
+              <p class="hero-subtitle">Real-time competency benchmarking against your target role. Identified gaps are automatically bridged by AI-ranked recommended courses.</p>
+            </div>
+          </div>
+        </div>
+        <div class="section-hdr"><div class="section-title">📊 Competency Benchmarks vs Industry Standard</div></div>
+        <div class="gap-grid" id="gap-cards"></div>
+      </div>
+
+      <!-- ======= CATALOG VIEW ======= -->
+      <div class="view" id="view-catalog">
+        <div class="hero-banner">
+          <div class="hero-inner">
+            <div class="hero-left">
+              <div class="streak-pill" style="background:rgba(251,191,36,0.1);border-color:rgba(251,191,36,0.25);color:var(--amber-300)">📚 Full Course Library</div>
+              <h1 class="hero-title">Complete <span>Course Catalog</span></h1>
+              <p class="hero-subtitle">Explore the full library of AI-curated, industry-aligned courses.</p>
+            </div>
+          </div>
+        </div>
+        <div class="courses-grid" id="catalog-courses"></div>
+      </div>
+
+      <!-- ======= PROFILE VIEW ======= -->
+      <div class="view" id="view-profile">
+        <div class="section-hdr"><div class="section-title">👤 Profile & Analytics</div></div>
+        <div class="profile-grid">
+          <div class="profile-card">
+            <div class="avatar-wrap">🧑‍💻</div>
+            <div class="profile-name">Alex Morgan</div>
+            <div class="profile-title">Aspiring AI / Machine Learning Engineer</div>
+            <div style="font-size:11px;color:var(--slate-400)">alex.morgan@stanford.edu</div>
+            <div class="profile-stats">
+              <div class="p-stat"><div class="p-stat-v">4</div><div class="p-stat-l">Completed</div></div>
+              <div class="p-stat"><div class="p-stat-v">74h</div><div class="p-stat-l">Learned</div></div>
+              <div class="p-stat"><div class="p-stat-v">14🔥</div><div class="p-stat-l">Streak</div></div>
+            </div>
+            <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.07)">
+              <div style="font-size:11px;font-weight:700;color:var(--slate-300);margin-bottom:10px">Skill Competencies</div>
+              <div class="competency-list" id="comp-list"></div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div style="background:rgba(15,23,42,0.85);border:1px solid rgba(255,255,255,0.07);border-radius:20px;padding:20px">
+              <div style="font-size:13px;font-weight:700;color:var(--slate-100);margin-bottom:14px">🏆 Earned Achievements</div>
+              <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px" id="achievements"></div>
+            </div>
+            <div style="background:rgba(15,23,42,0.85);border:1px solid rgba(255,255,255,0.07);border-radius:20px;padding:20px">
+              <div style="font-size:13px;font-weight:700;color:var(--slate-100);margin-bottom:14px">⏱ Recent Activity</div>
+              <div id="activity-list" style="display:flex;flex-direction:column;gap:10px"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ===== INSPECTOR PANEL ===== -->
+<div id="inspector">
+  <div class="insp-header">
+    <div class="insp-header-left">
+      <div class="insp-type-icon" id="insp-icon" style="background:rgba(99,102,241,0.15)">✨</div>
+      <div>
+        <div class="insp-type-label" id="insp-type-label">Course Node Telemetry</div>
+        <div class="insp-node-title" id="insp-node-title">3D Neural Inspector</div>
+      </div>
+    </div>
+    <div class="close-btn" onclick="closeInspector()">✕</div>
+  </div>
+  <div class="insp-body" id="insp-body"></div>
+  <div class="insp-footer" id="insp-footer" style="display:none"></div>
+</div>
+
+<!-- ===== TOAST CONTAINER ===== -->
+<div id="toast-container"></div>
+
+<!-- ===== JAVASCRIPT ===== -->
+<script>
+/* ========================= DATA ========================= */
+const COURSES = [
+  { id:'c1', title:'Modern Python for Data Science & Machine Learning', category:'AI & Machine Learning', level:'Beginner', rating:4.88, durationHours:24, enrolledCount:28400, matchScore:96, thumbnail:'🐍', color:0x10b981, skillsTaught:['Python & Data Structures','Data Pipelines & SQL','Machine Learning Basics'], reason:'🎯 96% Match: Foundational requirement — bridges your Python gap for AI/ML Engineering', enrolled:false, bookmarked:false },
+  { id:'c2', title:'Deep Learning & Neural Networks with PyTorch 2.4', category:'AI & Machine Learning', level:'Advanced', rating:4.95, durationHours:38, enrolledCount:18200, matchScore:98, thumbnail:'🔥', color:0x06b6d4, skillsTaught:['Deep Learning & PyTorch','Machine Learning Basics'], reason:'🎯 98% Match: Directly closes your largest skill gap in Deep Learning & PyTorch for AI/ML Engineer', enrolled:true, bookmarked:false },
+  { id:'c3', title:'Production MLOps & LLM Deployment on Cloud', category:'MLOps & Cloud Infrastructure', level:'Advanced', rating:4.92, durationHours:36, enrolledCount:14800, matchScore:95, thumbnail:'⚙️', color:0x8b5cf6, skillsTaught:['MLOps & Cloud Deploy','LLMs & GenAI Systems'], reason:'🔥 95% Match: Top ranked by peers transitioning to AI/ML Engineer role', enrolled:false, bookmarked:true },
+  { id:'c4', title:'LLM Engineering & RAG Architectures with LangChain', category:'AI & Machine Learning', level:'Advanced', rating:4.89, durationHours:30, enrolledCount:12600, matchScore:93, thumbnail:'🤖', color:0xf59e0b, skillsTaught:['LLMs & GenAI Systems'], reason:'💡 93% Match: Expands your GenAI system design capabilities', enrolled:false, bookmarked:false },
+  { id:'c5', title:'Full-Stack MLOps with Kubernetes & FastAPI', category:'MLOps & Cloud Infrastructure', level:'Intermediate', rating:4.85, durationHours:28, enrolledCount:9800, matchScore:90, thumbnail:'☸️', color:0xec4899, skillsTaught:['MLOps & Cloud Deploy','Data Pipelines & SQL'], reason:'⭐ 90% Match: Broadens cross-functional engineering portfolio', enrolled:false, bookmarked:true },
+  { id:'c6', title:'Data Engineering & Big Data Pipelines with Spark', category:'Data Engineering & Big Data', level:'Intermediate', rating:4.82, durationHours:32, enrolledCount:11200, matchScore:88, thumbnail:'📊', color:0x3b82f6, skillsTaught:['Data Pipelines & SQL'], reason:'💡 88% Match: Expands your Data Engineering capabilities', enrolled:true, bookmarked:false },
+];
+
+const SKILLS = [
+  { skill:'Python & Data Structures', current:92, target:95, gap:3 },
+  { skill:'Machine Learning Basics', current:86, target:90, gap:4 },
+  { skill:'Deep Learning & PyTorch', current:68, target:92, gap:24 },
+  { skill:'MLOps & Cloud Deploy', current:52, target:88, gap:36 },
+  { skill:'Data Pipelines & SQL', current:78, target:85, gap:7 },
+  { skill:'LLMs & GenAI Systems', current:58, target:90, gap:32 },
+];
+
+const ROLES = [
+  'AI / Machine Learning Engineer',
+  'Cloud & MLOps Architect',
+  'Data Platform Engineer',
+  'LLM Systems Engineer',
+];
+
+const ACHIEVEMENTS = [
+  { icon:'🧑‍💻', title:'Python Proficiency', desc:'Mastered Python for ML', color:'from-indigo-500 to-blue-600' },
+  { icon:'🔥', title:'14-Day Streak', desc:'Maintained daily study habit', color:'from-amber-500 to-rose-600' },
+  { icon:'✨', title:'Vector Master', desc:'Scored 100% on embeddings quiz', color:'from-teal-400 to-emerald-600' },
+  { icon:'🚀', title:'Pipeline Architect', desc:'Deployed first FastAPI service', color:'from-cyan-500 to-blue-600' },
+];
+
+const ACTIVITY = [
+  { icon:'✅', title:'Passed CNN Architecture Mastery Quiz', sub:'Deep Learning & Neural Networks with PyTorch', time:'2h ago' },
+  { icon:'📖', title:'Completed Module: Building Custom PyTorch Layers', sub:'Deep Learning & Neural Networks with PyTorch', time:'Yesterday' },
+  { icon:'🤖', title:'AI Engine updated your learning path recommendations', sub:'Production MLOps & LLM Deployment', time:'2 days ago' },
+  { icon:'🏆', title:'Earned Certificate of Completion', sub:'Modern Python for Data Science & AI', time:'1 week ago' },
+];
+
+/* ========================= STATE ========================= */
+let activeRole = ROLES[0];
+let activeLayout = 'constellation';
+let activePulse  = true;
+let activeCategory = 'All';
+let minScore = 70;
+let enrolledIds  = new Set(COURSES.filter(c=>c.enrolled).map(c=>c.id));
+let bookmarkedIds= new Set(COURSES.filter(c=>c.bookmarked).map(c=>c.id));
+let inspectedNode = null;
+
+/* ========================= NAVIGATION ========================= */
+function navigate(view) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('view-'+view).classList.add('active');
+  const navEl = document.getElementById('nav-'+view);
+  if(navEl) navEl.classList.add('active');
+  const navBtn = document.getElementById('nav-3d-btn');
+  if(navBtn) navBtn.classList.toggle('active', view==='neural-universe');
+  closeInspector();
+  if(view==='neural-universe' && !rendererReady) initThreeScene();
+}
+
+/* ========================= RENDER COURSE CARDS ========================= */
+function renderCourseCard(course, container) {
+  const isEnrolled  = enrolledIds.has(course.id);
+  const isBookmarked= bookmarkedIds.has(course.id);
+  const div = document.createElement('div');
+  div.className = 'course-card';
+  div.innerHTML = `
+    <div class="course-thumb-placeholder" style="background:linear-gradient(135deg,rgba(${hexToRgb(course.color)},0.25),rgba(15,23,42,0.9))">${course.thumbnail}</div>
+    <div class="course-body">
+      <div class="course-tags">
+        <span class="tag tag-cat">${course.category}</span>
+        <span class="tag tag-match">${course.matchScore}% AI Match</span>
+        <span class="tag tag-level">${course.level}</span>
+      </div>
+      <div class="course-title">${course.title}</div>
+      <div class="course-meta">
+        <span>⭐ ${course.rating}</span>
+        <span>⏱ ${course.durationHours}h</span>
+        <span>👥 ${(course.enrolledCount/1000).toFixed(1)}k</span>
+      </div>
+      <div class="course-reason">${course.reason}</div>
+      <div class="course-footer">
+        <button class="btn-enroll ${isEnrolled?'enrolled':''}" id="enroll-${course.id}" onclick="handleEnroll('${course.id}')">
+          ${isEnrolled?'✅ Enrolled':'⚡ Enroll Now'}
+        </button>
+        <button class="btn-bookmark ${isBookmarked?'active':''}" id="bm-${course.id}" onclick="handleBookmark('${course.id}')">
+          ${isBookmarked?'🔖':'🔖'}
+        </button>
+      </div>
+    </div>
+  `;
+  container.appendChild(div);
+}
+
+function hexToRgb(hex) {
+  const r=(hex>>16)&255, g=(hex>>8)&255, b=hex&255;
+  return `${r},${g},${b}`;
+}
+
+function populateCourses() {
+  const dash = document.getElementById('dashboard-courses');
+  const rec  = document.getElementById('rec-courses');
+  const uni  = document.getElementById('universe-courses');
+  const cat  = document.getElementById('catalog-courses');
+  [dash,rec,uni,cat].forEach(el=>el.innerHTML='');
+  COURSES.slice(0,3).forEach(c=>renderCourseCard(c, dash));
+  COURSES.forEach(c=>renderCourseCard(c, rec));
+  COURSES.slice(0,3).forEach(c=>renderCourseCard(c, uni));
+  COURSES.forEach(c=>renderCourseCard(c, cat));
+}
+
+function handleEnroll(id) {
+  if(enrolledIds.has(id)) return;
+  enrolledIds.add(id);
+  document.querySelectorAll(`#enroll-${id}`).forEach(btn=>{
+    btn.textContent='✅ Enrolled';
+    btn.classList.add('enrolled');
+  });
+  const course = COURSES.find(c=>c.id===id);
+  showToast('🎉 Enrollment Confirmed!', `Enrolled in "${course.title}". Learning module loaded.`);
+}
+
+function handleBookmark(id) {
+  const isBm = bookmarkedIds.has(id);
+  if(isBm) { bookmarkedIds.delete(id); showToast('ℹ️ Bookmark Removed','Course removed from your wishlist.'); }
+  else { bookmarkedIds.add(id); showToast('⭐ Saved to Wishlist','Course added to your saved bookmarks.'); }
+  document.querySelectorAll(`#bm-${id}`).forEach(btn=>btn.classList.toggle('active',!isBm));
+}
+
+/* ========================= SKILL GAP ========================= */
+function populateSkillGap() {
+  const container = document.getElementById('gap-cards');
+  container.innerHTML = '';
+  SKILLS.forEach(sk => {
+    const gapClass = sk.gap > 25 ? 'gap-high' : sk.gap > 10 ? 'gap-medium' : 'gap-low';
+    const gapLabel = sk.gap > 25 ? '⚠ High Gap' : sk.gap > 10 ? '◐ Medium Gap' : '✓ Low Gap';
+    container.innerHTML += `
+      <div class="gap-card">
+        <div class="gap-card-top">
+          <div class="gap-skill-name">${sk.skill}</div>
+          <div class="gap-chip ${gapClass}">${gapLabel} (${sk.gap}%)</div>
+        </div>
+        <div class="gap-bar-section">
+          <div class="gap-bar-label"><span>Your Mastery</span><span style="font-family:monospace;color:var(--amber-300)">${sk.current}%</span></div>
+          <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${sk.current}%;background:var(--amber-400)"></div></div>
+        </div>
+        <div class="gap-bar-section">
+          <div class="gap-bar-label"><span>Industry Target</span><span style="font-family:monospace;color:var(--emerald-400)">${sk.target}%</span></div>
+          <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${sk.target}%"></div></div>
+        </div>
+      </div>
+    `;
+  });
+}
+
+/* ========================= PROFILE ========================= */
+function populateProfile() {
+  const cl = document.getElementById('comp-list');
+  cl.innerHTML = '';
+  SKILLS.forEach(sk=>{
+    cl.innerHTML += `
+      <div class="comp-row">
+        <div class="comp-top"><span>${sk.skill}</span><span style="font-family:monospace">${sk.current}%</span></div>
+        <div class="comp-bar"><div class="comp-fill" style="width:${sk.current}%"></div></div>
+      </div>`;
+  });
+  const ach = document.getElementById('achievements');
+  ach.innerHTML = '';
+  ACHIEVEMENTS.forEach(a=>{
+    ach.innerHTML += `
+      <div style="background:rgba(15,23,42,0.8);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:12px;display:flex;align-items:flex-start;gap:9px">
+        <div style="width:32px;height:32px;background:linear-gradient(135deg,rgba(99,102,241,0.3),rgba(20,184,166,0.3));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${a.icon}</div>
+        <div><div style="font-size:12px;font-weight:700;color:var(--slate-100)">${a.title}</div><div style="font-size:10px;color:var(--slate-400)">${a.desc}</div></div>
+      </div>`;
+  });
+  const al = document.getElementById('activity-list');
+  al.innerHTML = '';
+  ACTIVITY.forEach(a=>{
+    al.innerHTML += `
+      <div style="display:flex;align-items:flex-start;gap:10px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.05)">
+        <div style="width:28px;height:28px;border-radius:8px;background:rgba(99,102,241,0.12);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">${a.icon}</div>
+        <div><div style="font-size:11px;font-weight:600;color:var(--slate-200)">${a.title}</div><div style="font-size:10px;color:var(--slate-400)">${a.sub} · ${a.time}</div></div>
+      </div>`;
+  });
+}
+
+/* ========================= ROLE STRIP ========================= */
+function populateRoleStrip() {
+  const strip = document.getElementById('role-strip');
+  strip.innerHTML = '<span class="role-strip-label">🎯 Career Goal:</span>';
+  ROLES.forEach(r=>{
+    const btn = document.createElement('button');
+    btn.className = 'role-pill'+(r===activeRole?' active':'');
+    btn.textContent = r;
+    btn.onclick = ()=>{ activeRole=r; document.querySelectorAll('.role-pill').forEach(p=>p.classList.remove('active')); btn.classList.add('active'); document.getElementById('sidebar-role').textContent=r; if(threeScene)rebuildNodes(); showToast('🧠 3D Graph Reconfigured',`Calculated spatial embeddings for "${r}".`); };
+    strip.appendChild(btn);
+  });
+}
+
+/* ========================= INSPECTOR ========================= */
+function openInspector(node) {
+  inspectedNode = node;
+  const insp = document.getElementById('inspector');
+  const icon = document.getElementById('insp-icon');
+  const typeLabel = document.getElementById('insp-type-label');
+  const nodeTitle = document.getElementById('insp-node-title');
+  const body = document.getElementById('insp-body');
+  const footer = document.getElementById('insp-footer');
+  body.innerHTML = '';
+  footer.style.display = 'none';
+  footer.innerHTML = '';
+
+  if(node.type==='course') {
+    const c = node.course;
+    const isEnrolled  = enrolledIds.has(c.id);
+    const isBookmarked= bookmarkedIds.has(c.id);
+    icon.textContent='✨'; icon.style.background='rgba(16,185,129,0.15)';
+    typeLabel.textContent='Course Node Telemetry';
+    nodeTitle.textContent=c.type||'course';
+
+    body.innerHTML = `
+      <div class="insp-match-banner">
+        <div class="insp-banner-top">
+          <div style="flex:1"><span style="font-size:11px;font-weight:700;color:var(--indigo-300);background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.25);padding:2px 10px;border-radius:99px">${c.category}</span>
+          <div class="insp-course-title" style="margin-top:10px">${c.title}</div></div>
+          <div class="match-badge-lg">✨ ${c.matchScore}% AI Match</div>
+        </div>
+        <div class="insp-desc">This course has been vector-ranked ${c.matchScore}% aligned to your target role of <strong style="color:var(--indigo-300)">${activeRole}</strong> using cosine similarity on a 128-dimensional skill embedding space.</div>
+        <div class="meta-stats-row">
+          <div class="meta-stat"><div class="meta-stat-label">Level</div><div class="meta-stat-val">${c.level}</div></div>
+          <div class="meta-stat"><div class="meta-stat-label">Duration</div><div class="meta-stat-val">${c.durationHours}h</div></div>
+          <div class="meta-stat"><div class="meta-stat-label">Rating</div><div class="meta-stat-val" style="color:var(--amber-400)">⭐ ${c.rating}</div></div>
+        </div>
+      </div>
+      <div class="xai-block">
+        <div class="xai-title">🧠 Explainable AI (XAI) Vector Rationale</div>
+        <div class="xai-reason">${c.reason}</div>
+        <div class="factor-row">
+          <div class="factor-top"><span>Target Career Affinity</span><span class="factor-val emerald">96%</span></div>
+          <div class="factor-bar"><div class="factor-bar-fill fill-emerald" style="width:96%"></div></div>
+        </div>
+        <div class="factor-row">
+          <div class="factor-top"><span>Skill Deficit Gap Closure</span><span class="factor-val indigo">88%</span></div>
+          <div class="factor-bar"><div class="factor-bar-fill fill-indigo" style="width:88%"></div></div>
+        </div>
+        <div class="factor-row">
+          <div class="factor-top"><span>Cohort Success & Benchmark</span><span class="factor-val teal">92%</span></div>
+          <div class="factor-bar"><div class="factor-bar-fill fill-teal" style="width:92%"></div></div>
+        </div>
+      </div>
+      <div class="skills-block">
+        <div class="skills-title">🏆 Target Skills Uplift</div>
+        <div class="skills-wrap">${c.skillsTaught.map(s=>`<div class="skill-tag">✅ ${s}</div>`).join('')}</div>
+      </div>
+    `;
+
+    footer.style.display = 'flex';
+    footer.innerHTML = `
+      <div class="footer-row">
+        <button class="btn-full ${isEnrolled?'enrolled-state':'primary'}" id="insp-enroll-${c.id}" onclick="handleEnroll('${c.id}')">
+          ${isEnrolled?'✅ Enrolled (Active)':'⚡ Enroll in Course'}
+        </button>
+        <div class="btn-icon ${isBookmarked?'bookmarked':''}" id="insp-bm-${c.id}" onclick="handleBookmark('${c.id}')" title="Bookmark">🔖</div>
+      </div>
+      <div class="footer-row">
+        <button class="btn-full secondary">📖 Full Syllabus & Modules</button>
+        <button class="btn-full secondary" onclick="recenterCamera()">🎯 Recenter</button>
+      </div>`;
+  }
+  else if(node.type==='skill') {
+    icon.textContent='🧠'; icon.style.background='rgba(245,158,11,0.15)';
+    typeLabel.textContent='Skill Deficit Node'; nodeTitle.textContent='Skill Gap';
+    body.innerHTML = `
+      <div style="background:rgba(120,53,15,0.2);border:1px solid rgba(245,158,11,0.3);border-radius:18px;padding:16px">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--amber-400);margin-bottom:6px">Identified Skill Deficit</div>
+        <div style="font-size:18px;font-weight:800;margin-bottom:8px">${node.skill}</div>
+        <div style="font-size:11px;color:var(--slate-300)">This skill is critical for your target role of <strong style="color:var(--amber-300)">${activeRole}</strong>.</div>
+      </div>
+      <div style="background:rgba(15,23,42,0.85);border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:16px">
+        <div style="font-size:12px;font-weight:700;color:var(--slate-300);margin-bottom:12px">Competency Benchmark</div>
+        <div style="margin-bottom:10px">
+          <div class="gap-bar-label" style="display:flex;justify-content:space-between;font-size:10px;color:var(--slate-400);margin-bottom:4px"><span>Your Current Mastery</span><span style="font-family:monospace;color:var(--amber-400);font-weight:700">${node.current}%</span></div>
+          <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${node.current}%;background:var(--amber-400)"></div></div>
+        </div>
+        <div>
+          <div class="gap-bar-label" style="display:flex;justify-content:space-between;font-size:10px;color:var(--slate-400);margin-bottom:4px"><span>Industry Target</span><span style="font-family:monospace;color:var(--emerald-400);font-weight:700">${node.target}%</span></div>
+          <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${node.target}%"></div></div>
+        </div>
+      </div>`;
+  }
+  else if(node.type==='role') {
+    icon.textContent='🎯'; icon.style.background='rgba(168,85,247,0.15)';
+    typeLabel.textContent='Career Destination Beacon'; nodeTitle.textContent='Target Role';
+    body.innerHTML = `
+      <div style="background:rgba(88,28,135,0.2);border:1px solid rgba(168,85,247,0.3);border-radius:18px;padding:16px">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--purple-400);margin-bottom:6px">Career Destination Beacon</div>
+        <div style="font-size:18px;font-weight:800;margin-bottom:8px">${node.label}</div>
+        <div style="font-size:11px;color:var(--slate-300)">Your destination milestone. All 3D course nodes radiate gravitational affinity toward this beacon.</div>
+      </div>
+      <div style="background:rgba(15,23,42,0.85);border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:16px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px"><span style="color:var(--slate-400)">Career Readiness Quotient</span><span style="font-family:monospace;font-weight:900;color:var(--purple-400);font-size:14px">78.5%</span></div>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:78.5%;background:linear-gradient(to right,var(--purple-500),var(--indigo-500))"></div></div>
+        <div style="font-size:10px;color:var(--slate-400);margin-top:8px">Estimated 3 targeted courses remaining to reach 95%+ Industry Ready threshold.</div>
+      </div>`;
+  }
+  else {
+    icon.textContent='💻'; icon.style.background='rgba(34,211,238,0.15)';
+    typeLabel.textContent='Learner Digital Twin Core'; nodeTitle.textContent='You';
+    body.innerHTML = `
+      <div style="background:rgba(8,51,68,0.25);border:1px solid rgba(34,211,238,0.3);border-radius:18px;padding:16px">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--cyan-400);margin-bottom:6px">Learner Digital Twin Core</div>
+        <div style="font-size:18px;font-weight:800;margin-bottom:8px">Alex Morgan</div>
+        <div style="font-size:11px;color:var(--slate-300)">Origin point of your 3D Knowledge Universe. High-dimensional latent embedding computed from your completed modules and quiz performance.</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="background:rgba(15,23,42,0.85);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:12px">
+          <div style="font-size:10px;color:var(--slate-400)">Completed Courses</div>
+          <div style="font-size:22px;font-weight:900;font-family:monospace">4</div>
+        </div>
+        <div style="background:rgba(15,23,42,0.85);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:12px">
+          <div style="font-size:10px;color:var(--slate-400)">Active In-Progress</div>
+          <div style="font-size:22px;font-weight:900;font-family:monospace;color:var(--indigo-400)">3</div>
+        </div>
+      </div>`;
+  }
+
+  insp.classList.add('open');
+}
+
+function closeInspector() {
+  document.getElementById('inspector').classList.remove('open');
+  inspectedNode = null;
+}
+
+/* ========================= TOAST ========================= */
+function showToast(title, msg, duration=3500) {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerHTML = `<div class="toast-icon">🔔</div><div><div class="toast-title">${title}</div><div class="toast-msg">${msg}</div></div>`;
+  container.appendChild(toast);
+  setTimeout(()=>{ toast.style.transition='opacity 0.3s'; toast.style.opacity='0'; setTimeout(()=>toast.remove(),300); }, duration);
+}
+
+/* ========================= THREE.JS 3D SCENE ========================= */
+let threeScene, threeCamera, threeRenderer, threeControls, threeAnim;
+let nodeObjects=[], pulseObjects=[];
+let rendererReady=false;
+const ORIGIN = new THREE.Vector3(0,0,0);
+
+function initThreeScene() {
+  const canvas = document.getElementById('three-canvas');
+  const wrap   = document.getElementById('universe-wrap');
+  const W = wrap.clientWidth, H = wrap.clientHeight;
+
+  threeScene = new THREE.Scene();
+  threeScene.fog = new THREE.FogExp2(0x060913, 0.013);
+
+  threeCamera = new THREE.PerspectiveCamera(50, W/H, 0.1, 1200);
+  threeCamera.position.set(0, 18, 52);
+
+  threeRenderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
+  threeRenderer.setSize(W, H);
+  threeRenderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  threeRenderer.setClearColor(0x060913, 1);
+
+  // Lights
+  threeScene.add(new THREE.AmbientLight(0xffffff, 1.0));
+  const l1 = new THREE.PointLight(0x06b6d4,4,120); l1.position.set(0,0,0); threeScene.add(l1);
+  const l2 = new THREE.PointLight(0x10b981,3,150); l2.position.set(30,20,20); threeScene.add(l2);
+  const l3 = new THREE.PointLight(0x8b5cf6,3,150); l3.position.set(-30,-15,-20); threeScene.add(l3);
+
+  // Stars
+  const starsGeo = new THREE.BufferGeometry();
+  const starsPos = new Float32Array(1600*3);
+  for(let i=0;i<1600;i++) {
+    const r=70+Math.random()*120, t=Math.random()*Math.PI*2, p=Math.acos(Math.random()*2-1);
+    starsPos[i*3]=r*Math.sin(p)*Math.cos(t); starsPos[i*3+1]=r*Math.sin(p)*Math.sin(t); starsPos[i*3+2]=r*Math.cos(p);
+  }
+  starsGeo.setAttribute('position', new THREE.BufferAttribute(starsPos,3));
+  const stars = new THREE.Points(starsGeo, new THREE.PointsMaterial({size:1.0,color:0x8899cc,transparent:true,opacity:0.6}));
+  threeScene.add(stars);
+
+  // Learner Core
+  const coreGroup = new THREE.Group();
+  coreGroup.add(new THREE.Mesh(new THREE.SphereGeometry(2.2,32,32), new THREE.MeshStandardMaterial({color:0x22d3ee,emissive:0x0369a1,emissiveIntensity:1.2,roughness:0.1,metalness:0.2})));
+  const outerMesh = new THREE.Mesh(new THREE.IcosahedronGeometry(3.2,2), new THREE.MeshPhongMaterial({color:0x38bdf8,emissive:0x0284c7,wireframe:true,transparent:true,opacity:0.55}));
+  coreGroup.add(outerMesh);
+  const r1 = new THREE.Mesh(new THREE.TorusGeometry(4.2,0.07,16,100), new THREE.MeshBasicMaterial({color:0x38bdf8,transparent:true,opacity:0.4}));
+  const r2 = r1.clone();
+  r1.rotation.x = Math.PI/3; r2.rotation.y = Math.PI/3;
+  coreGroup.add(r1,r2);
+  coreGroup.userData = {type:'user',label:'Alex Morgan'};
+  threeScene.add(coreGroup);
+
+  // Orbit Controls (simple manual implementation)
+  setupOrbitControls(canvas, threeCamera);
+
+  // Resize
+  window.addEventListener('resize', ()=>{
+    const W2=wrap.clientWidth, H2=wrap.clientHeight;
+    threeCamera.aspect=W2/H2; threeCamera.updateProjectionMatrix();
+    threeRenderer.setSize(W2,H2);
+  });
+
+  // Events
+  canvas.addEventListener('mousemove', onMouseMove);
+  canvas.addEventListener('click', onMouseClick);
+
+  rendererReady = true;
+  rebuildNodes();
+
+  // Animation loop
+  const clock = new THREE.Clock();
+  function animate() {
+    threeAnim = requestAnimationFrame(animate);
+    const t = clock.getElapsedTime();
+    outerMesh.rotation.y = t*0.25; outerMesh.rotation.x = t*0.15;
+    r1.rotation.z = t*0.35; r2.rotation.x = t*0.25;
+    stars.rotation.y = t*0.01;
+
+    if(activePulse) {
+      pulseObjects.forEach(p=>{
+        p.userData.progress = (p.userData.progress + 0.008*p.userData.speed) % 1;
+        const pt = p.userData.curve.getPoint(p.userData.progress);
+        p.mesh.position.copy(pt);
+      });
+    }
+
+    cameraLerp();
+    threeRenderer.render(threeScene, threeCamera);
+  }
+  animate();
+}
+
+// ---- Simple Orbit Controls ----
+let isDragging=false, prevMouse={x:0,y:0}, spherical={theta:0,phi:Math.PI/3,r:55};
+let camTarget={x:0,y:0,z:0};
+let targetCamPos=null, targetLookAt=null;
+
+function setupOrbitControls(canvas, camera) {
+  canvas.addEventListener('mousedown', e=>{ isDragging=true; prevMouse={x:e.clientX,y:e.clientY}; });
+  window.addEventListener('mouseup', ()=>{ isDragging=false; });
+  window.addEventListener('mousemove', e=>{
+    if(!isDragging) return;
+    const dx=(e.clientX-prevMouse.x)*0.008, dy=(e.clientY-prevMouse.y)*0.008;
+    spherical.theta -= dx; spherical.phi = Math.max(0.15, Math.min(Math.PI-0.15, spherical.phi+dy));
+    prevMouse={x:e.clientX,y:e.clientY};
+    updateCameraFromSpherical();
+  });
+  canvas.addEventListener('wheel', e=>{
+    spherical.r = Math.max(18, Math.min(180, spherical.r+e.deltaY*0.08));
+    updateCameraFromSpherical();
+  });
+  updateCameraFromSpherical();
+}
+
+function updateCameraFromSpherical() {
+  threeCamera.position.set(
+    spherical.r*Math.sin(spherical.phi)*Math.sin(spherical.theta),
+    spherical.r*Math.cos(spherical.phi),
+    spherical.r*Math.sin(spherical.phi)*Math.cos(spherical.theta)
+  );
+  threeCamera.lookAt(0,0,0);
+}
+
+function cameraLerp() {
+  if(targetCamPos) {
+    threeCamera.position.lerp(targetCamPos,0.06);
+    if(threeCamera.position.distanceTo(targetCamPos)<0.5) targetCamPos=null;
+    threeCamera.lookAt(0,0,0);
+  }
+}
+
+function recenterCamera() {
+  spherical={theta:0,phi:Math.PI/3,r:55};
+  updateCameraFromSpherical();
+}
+
+// ---- Build Nodes ----
+function rebuildNodes() {
+  // Clear old nodes
+  nodeObjects.forEach(o=>{ threeScene.remove(o.mesh); if(o.line) threeScene.remove(o.line); });
+  pulseObjects.forEach(p=>threeScene.remove(p.mesh));
+  nodeObjects=[]; pulseObjects=[];
+
+  // Skill Gap Nodes
+  const skillPositions = [];
+  SKILLS.forEach((sk,i)=>{
+    let pos = getSkillPos(i, SKILLS.length);
+    skillPositions.push({...sk, pos});
+    const color = sk.gap>25 ? 0xf43f5e : sk.gap>10 ? 0xf59e0b : 0x10b981;
+    const mesh = new THREE.Mesh(
+      new THREE.DodecahedronGeometry(1.3,0),
+      new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:0.75,roughness:0.3,metalness:0.4})
+    );
+    mesh.position.copy(pos);
+    mesh.userData = {type:'skill', skill:sk.skill, current:sk.current, target:sk.target, gap:sk.gap, label:sk.skill};
+    threeScene.add(mesh);
+    addSynapse(ORIGIN, pos, color, 0.3, 0.22);
+    nodeObjects.push({mesh, type:'skill'});
+  });
+
+  // Career Beacon
+  const beaconPos = getBeaconPos();
+  const beaconGroup = new THREE.Group();
+  beaconGroup.add(new THREE.Mesh(new THREE.OctahedronGeometry(2.4,1), new THREE.MeshStandardMaterial({color:0xa855f7,emissive:0x7c3aed,emissiveIntensity:1.3,metalness:0.7,roughness:0.2})));
+  const bWire = new THREE.Mesh(new THREE.OctahedronGeometry(3.2,1), new THREE.MeshBasicMaterial({color:0xc084fc,wireframe:true,transparent:true,opacity:0.55}));
+  beaconGroup.add(bWire);
+  beaconGroup.position.copy(beaconPos);
+  beaconGroup.userData = {type:'role', label:activeRole};
+  threeScene.add(beaconGroup);
+  nodeObjects.push({mesh:beaconGroup, type:'role'});
+
+  // Course Nodes
+  const filtered = COURSES.filter(c=>c.matchScore>=minScore && (activeCategory==='All'||c.category.includes(activeCategory)));
+  filtered.forEach((c,i)=>{
+    const pos = getCoursePos(i, filtered.length, c.matchScore);
+    const isTop = c.matchScore>=90;
+    const mesh = new THREE.Mesh(
+      new THREE.SphereGeometry(0.9+(c.matchScore/100)*0.8, 22,22),
+      new THREE.MeshStandardMaterial({color:c.color,emissive:c.color,emissiveIntensity:isTop?0.8:0.4,roughness:0.25,metalness:0.3})
+    );
+    if(isTop) {
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(1.6,0.06,12,60), new THREE.MeshBasicMaterial({color:0x34d399,transparent:true,opacity:0.6}));
+      ring.rotation.x=Math.PI/2; mesh.add(ring);
+    }
+    mesh.position.copy(pos);
+    mesh.userData = {type:'course', course:c, matchScore:c.matchScore, label:c.title};
+    threeScene.add(mesh);
+
+    // Synapse to matching skill or core
+    const matched = skillPositions.find(sk=>c.skillsTaught&&c.skillsTaught.includes(sk.skill));
+    const srcPos = matched ? matched.pos : ORIGIN;
+    addSynapse(srcPos, pos, c.color, isTop?0.45:0.2, isTop?0.3:0.18);
+
+    if(isTop) {
+      addSynapse(pos, beaconPos, 0xa855f7, 0.35, 0.28);
+    }
+    nodeObjects.push({mesh, type:'course'});
+  });
+}
+
+function getSkillPos(i, total) {
+  if(activeLayout==='highway') {
+    const y=(i-(total-1)/2)*8;
+    return new THREE.Vector3(-17, y, i%2===0?4:-4);
+  }
+  if(activeLayout==='affinity') {
+    const a=(i/total)*Math.PI*2;
+    return new THREE.Vector3(Math.cos(a)*15, Math.sin(a)*15, 0);
+  }
+  const a=(i/total)*Math.PI*2, r=14;
+  return new THREE.Vector3(Math.cos(a)*r, Math.sin(a*2)*5, Math.sin(a)*r);
+}
+
+function getBeaconPos() {
+  if(activeLayout==='highway') return new THREE.Vector3(44,0,0);
+  if(activeLayout==='affinity') return new THREE.Vector3(0,34,0);
+  return new THREE.Vector3(40,14,8);
+}
+
+function getCoursePos(i, total, score) {
+  if(activeLayout==='highway') {
+    const x=score>=92?26:score>=85?4:15;
+    const row=(i%5)-2;
+    return new THREE.Vector3(x+Math.sin(i)*2, row*6.5, i%2===0?6:-6);
+  }
+  if(activeLayout==='affinity') {
+    const r=17+(100-score)*0.55;
+    const phi=Math.acos(-1+(2*i)/Math.max(1,total));
+    const theta=Math.sqrt(total*Math.PI)*phi;
+    return new THREE.Vector3(r*Math.cos(theta)*Math.sin(phi), r*Math.sin(theta)*Math.sin(phi), r*Math.cos(phi));
+  }
+  const r=23+(100-score)*0.3;
+  const phi=Math.acos(-1+(2*i)/Math.max(1,total));
+  const theta=Math.sqrt(total*Math.PI)*phi+i*0.35;
+  return new THREE.Vector3(r*Math.cos(theta)*Math.sin(phi), r*Math.sin(theta)*Math.sin(phi)+Math.sin(i)*3, r*Math.cos(phi));
+}
+
+function addSynapse(srcPos, dstPos, color, lineOpacity, pulseSpeed) {
+  const mid = new THREE.Vector3((srcPos.x+dstPos.x)*0.5,(srcPos.y+dstPos.y)*0.5+3,(srcPos.z+dstPos.z)*0.5);
+  const curve = new THREE.QuadraticBezierCurve3(srcPos.clone(), mid, dstPos.clone());
+  const pts = curve.getPoints(24);
+  const geo = new THREE.BufferGeometry().setFromPoints(pts);
+  const line = new THREE.Line(geo, new THREE.LineBasicMaterial({color,transparent:true,opacity:lineOpacity}));
+  threeScene.add(line);
+  nodeObjects.push({mesh:line, type:'line'});
+
+  const pm = new THREE.Mesh(new THREE.SphereGeometry(0.28,10,10), new THREE.MeshBasicMaterial({color}));
+  threeScene.add(pm);
+  pulseObjects.push({mesh:pm, userData:{curve, progress:Math.random(), speed:pulseSpeed}});
+  // Mirror userData
+  const po = pulseObjects[pulseObjects.length-1];
+  po.userData = po.userData;
+}
+
+// ---- Raycaster ----
+const raycaster = new THREE.Raycaster();
+const mouse2D = new THREE.Vector2();
+const tooltip = document.getElementById('node-tooltip');
+const ttBadge = document.getElementById('tt-type-badge');
+const ttTitle = document.getElementById('tt-title');
+const ttSub   = document.getElementById('tt-sub');
+let hoveredMesh = null;
+
+function getInteractable() {
+  return nodeObjects.filter(n=>n.type!=='line').map(n=>n.mesh).flatMap(m=>{
+    if(m.children) {
+      const res=[m];
+      m.children.forEach(c=>{if(c.isMesh)res.push(c);});
+      return res;
+    }
+    return [m];
+  });
+}
+
+function onMouseMove(e) {
+  const rect = e.target.getBoundingClientRect();
+  const x=(e.clientX-rect.left)/rect.width*2-1;
+  const y=-((e.clientY-rect.top)/rect.height)*2+1;
+  mouse2D.set(x,y);
+  raycaster.setFromCamera(mouse2D, threeCamera);
+  const hits = raycaster.intersectObjects(getInteractable(), false);
+  if(hits.length) {
+    const hit = hits[0].object;
+    const data = hit.userData.type ? hit.userData : hit.parent?.userData;
+    if(data&&data.type&&data.type!=='line') {
+      tooltip.style.left=(e.clientX-e.target.getBoundingClientRect().left)+'px';
+      tooltip.style.top =(e.clientY-e.target.getBoundingClientRect().top)+'px';
+      tooltip.classList.add('show');
+
+      const typeColors = {course:'rgba(16,185,129,0.15)',skill:'rgba(245,158,11,0.15)',role:'rgba(168,85,247,0.15)',user:'rgba(34,211,238,0.15)'};
+      const typeTextC  = {course:'var(--emerald-300)',skill:'var(--amber-300)',role:'var(--purple-400)',user:'var(--cyan-300)'};
+      ttBadge.textContent = data.type.toUpperCase();
+      ttBadge.style.background = typeColors[data.type];
+      ttBadge.style.color = typeTextC[data.type];
+      ttBadge.style.borderColor= typeTextC[data.type];
+      ttTitle.textContent = data.label||data.course?.title||'';
+      ttSub.textContent = data.course ? `${data.course.category} • ${data.course.level} • ${data.matchScore}% Match` : data.skill ? `Gap: ${data.gap}%` : '';
+      e.target.style.cursor='pointer';
+      return;
+    }
+  }
+  tooltip.classList.remove('show');
+  e.target.style.cursor='grab';
+}
+
+function onMouseClick(e) {
+  if(isDragging) return;
+  const rect = e.target.getBoundingClientRect();
+  const x=(e.clientX-rect.left)/rect.width*2-1;
+  const y=-((e.clientY-rect.top)/rect.height)*2+1;
+  mouse2D.set(x,y);
+  raycaster.setFromCamera(mouse2D, threeCamera);
+  const hits = raycaster.intersectObjects(getInteractable(), false);
+  if(hits.length) {
+    const hit = hits[0].object;
+    const data = hit.userData.type ? hit.userData : hit.parent?.userData;
+    if(data&&data.type&&data.type!=='line') {
+      openInspector(data);
+    }
+  }
+}
+
+function setLayout(layout) {
+  activeLayout=layout;
+  document.querySelectorAll('.layout-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('layout-'+layout).classList.add('active');
+  if(threeScene) rebuildNodes();
+}
+
+function togglePulse() {
+  activePulse=!activePulse;
+  document.getElementById('pulse-btn').classList.toggle('pulse-on', activePulse);
+}
+
+function setCategory(cat, btn) {
+  activeCategory=cat;
+  document.querySelectorAll('.filter-chip').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(threeScene) rebuildNodes();
+}
+
+function updateScoreFilter(val) {
+  minScore=Number(val);
+  document.getElementById('score-val').textContent=val+'%+';
+  if(threeScene) rebuildNodes();
+}
+
+function toggleFullscreen() {
+  const wrap=document.getElementById('universe-wrap');
+  if(!document.fullscreenElement) wrap.requestFullscreen().catch(()=>{});
+  else document.exitFullscreen().catch(()=>{});
+}
+
+/* ========================= INIT & BACKEND SYNC ========================= */
+populateCourses();
+populateSkillGap();
+populateProfile();
+populateRoleStrip();
+
+// Connect to FastAPI EduRecommend Backend
+async function initEduBackend() {
+  if (typeof EduApi === 'undefined') return;
+  try {
+    const health = await EduApi.checkHealth();
+    const statusEl = document.getElementById('nav-backend-status');
+    if (health && health.status === 'ok') {
+      if (statusEl) {
+        statusEl.innerHTML = '<div class="pulse-dot" style="background:var(--emerald-400)"></div> FastAPI :8000';
+      }
+    }
+
+    const sessionUser = await EduApi.restoreSession();
+    if (sessionUser) {
+      if (sessionUser.name) {
+        document.querySelectorAll('.profile-name').forEach(el => el.textContent = sessionUser.name);
+        document.querySelector('.hero-title span').textContent = sessionUser.name;
+      }
+      if (sessionUser.program || sessionUser.target_career) {
+        activeRole = sessionUser.program || sessionUser.target_career;
+        document.getElementById('sidebar-role').textContent = activeRole;
+      }
+
+      // Fetch live AI recommendations from backend
+      const recs = await EduApi.getRecommendations(6, false);
+      if (recs && Array.isArray(recs.items) && recs.items.length > 0) {
+        recs.items.forEach(item => {
+          const existing = COURSES.find(c => c.id === item.course_id);
+          if (existing) {
+            existing.matchScore = item.match_pct || existing.matchScore;
+            existing.reason = item.reason || existing.reason;
+          } else {
+            COURSES.unshift({
+              id: item.course_id || `rec_${Math.random()}`,
+              title: item.title,
+              category: item.category || 'AI & Machine Learning',
+              level: item.level || 'Intermediate',
+              rating: 4.9,
+              durationHours: 26,
+              enrolledCount: 11000,
+              matchScore: item.match_pct || 94,
+              thumbnail: '⚡',
+              color: 0x10b981,
+              skillsTaught: ['Core ML', 'Data Science'],
+              reason: item.reason || `🎯 ${item.match_pct}% Match (Hybrid model)`,
+              enrolled: false,
+              bookmarked: false
+            });
+          }
+        });
+        populateCourses();
+        if (threeScene) rebuildNodes();
+        showToast('⚡ FastAPI Connected', `Loaded live AI recommendations for ${sessionUser.name}.`);
+      }
+    }
+  } catch (err) {
+    console.info('[3D Frontend] Backend note:', err.message);
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  initEduBackend();
+});
+</script>
+</body>
+</html>
